@@ -18,18 +18,21 @@ pipeline {
             steps {
                 script {
                     // Run the Docker container
-                    sh 'docker run -d -p 3000:3000 $DOCKER_IMAGE:$DOCKER_TAG'
+                    sh 'docker run -d -p 3006:3000 $DOCKER_IMAGE:$DOCKER_TAG'
                 }
             }
         }
         stage('Push Docker Image to DockerHub') {
             steps {
                 script {
-                    // Log in to DockerHub
-                    sh 'echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin'
-                    
-                    // Push the image to DockerHub
-                    sh 'docker push $DOCKER_IMAGE:$DOCKER_TAG'
+                    // Use the withCredentials block to extract docker credentials
+                    withCredentials([usernamePassword(credentialsId: 'dockercred', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                        // Log in to DockerHub
+                        sh 'echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin'
+                        
+                        // Push the image to DockerHub
+                        sh 'docker push $DOCKER_IMAGE:$DOCKER_TAG'
+                    }
                 }
             }
         }
